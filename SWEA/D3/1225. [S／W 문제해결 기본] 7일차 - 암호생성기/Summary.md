@@ -2,25 +2,24 @@
 
 ## 💡 접근 방식
 
-주어진 8개의 숫자를 순환 큐로 다루며, 0이 아닐 때까지 감소하는 규칙에 따라 값을 갱신.
+주어진 8개의 암호 숫자를 큐처럼 순환배열로 수정하며, 최소값에 따라 감소 처리 후 결과 출력.
 
 ## ⏱️ 시간 복잡도
 
-O(k) — k는 주어진 값들이 0이 될 때까지의 갱신 횟수에 비례. 최악의 경우 8번마다 1씩 감소하므로 상수 시간 복잡도일 가능성 높음.
+O(N*M) — 8개의 숫자를 M번 반복 처리하며, 각 반복마다 N(8)회의 최소값 검색이 필요. NxM 근사치로 볼 수 있음.
 
 ## 📦 공간 복잡도
 
-O(1) — 고정된 크기의 배열(nums)과 변수(head, tail, sub) 사용. 결과 출력에 요구되는 메모리 빼고 추가 메모리 사용 없음.
+O(1) — 입력된 숫자 배열 외에 추가 공간을 사용하지 않음; 상수 공간 유지.
 
 ## 🔧 개선 사항
 
-1) 서브 값을 미리 함수로 묶어 재사용성 향상
-2) 외부의 불필요한 배열을 제거하고, 입력을 HashSet으로 처리하여 간결함 개선
-3) nums 배열에 직접 줄인 값 할당 외에 List로 대체하여 유연성 확보
+1) 최소값 탐색을 단순 선형 검색에서 힙을 사용하여 O(log N) 탐색으로 개선 가능.
+2) sub 변수를 재귀적으로 사용할 필요 없이, 연속적인 감소 로직을 직접 구현해 가지치기 회수를 최소화하여 코드를 직관적으로 개선 가능.
 
 ## 🎯 다음 추천 문제
 
-백준 스택 수열 (문제 번호: 1874) | 순환 큐 대신 스택의 활용과 관련 깊은 문제로 연습 가치가 높음.
+백준 1240번 - 단체사진 | 큐와 순환 배열 사용에 대한 더 복잡한 로직을 학습하기 적합.
 
 ## 🏷️ 태그
 
@@ -38,25 +37,46 @@ class Solution {
     static int[] nums = new int[N];
 
     public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         StringBuilder sb = new StringBuilder();
-        
+
         for (int tc = 1; tc <= 10; tc++) {
-            String[] inputs = br.readLine().split();
+            String[] input = in.readLine().split();
             for (int i = 0; i < N; i++) {
-                nums[i] = Integer.parseInt(inputs[i]);
+                nums[i] = Integer.parseInt(input[i + 1]);
             }
-            
+
             int sub = 1;
-            for (int i = 0; nums[(i % N)] != 0; ) {
-                nums[i % N] = Math.max(0, nums[i % N] - sub);
+            while (true) {
+                int min = Integer.MAX_VALUE;
+                for (int num : nums) {
+                    if (num != 0 && num < min) {
+                        min = num;
+                    }
+                }
+                if (min == Integer.MAX_VALUE) break;
+
+                int cycle = (min - 1) / 15;
+                if (cycle > 0) {
+                    for (int i = 0; i < N; i++) {
+                        nums[i] -= 15 * cycle;
+                    }
+                    continue;
+                }
+
+                for (int i = 0; i < N; i++) {
+                    if (nums[i] != 0) {
+                        nums[i] -= sub;
+                        if (nums[i] < 0) nums[i] = 0;
+                        break;
+                    }
+                }
                 sub = (sub % 5) + 1;
-                i++;
             }
-            
+
             sb.append('#').append(tc).append(' ');
-            for (int i = 0; i < N; i++) {
-                sb.append(nums[i]).append(' ');
+            for (int num : nums) {
+                sb.append(num).append(' ');
             }
             sb.append('\n');
         }

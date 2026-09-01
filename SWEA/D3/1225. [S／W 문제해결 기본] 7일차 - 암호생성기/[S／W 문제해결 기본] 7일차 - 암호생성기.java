@@ -22,24 +22,37 @@ class Solution
 			head = 0;
 			tail = 0;
 			
-			for(int i = 0; i < 8; i++) {
+			for(int i = 0; i < N; i++) {
 				in.nextToken();
 				nums[tail++] = (int) in.nval;
 			}
 			
 			int sub = 1;
-			int cur;
-			while(nums[(tail - 1) % 8] != 0) {
-				cur = nums[head++ % 8];
+			int cur, cycle;
+			while(nums[(tail - 1) % N] != 0) {
+				cur = nums[0];
+				for(int i = 0; i < N; i++) {
+					if(nums[i] < cur) cur = nums[i];
+				}
+				cycle = (cur - 1) / 15; // 0까지 다 빼지 말고 직전까지만 세기
+				if(cycle > 0) {
+					for(int i = 0; i < N; i++) {
+						nums[i] -= 15 * cycle;
+					}
+					continue;
+				}
+				
+				// cycle이 안나오는 경우 남은 스텝 진행
+				cur = nums[head++ % N];
 				cur -= sub;
 				if (cur < 0) cur = 0;
-				nums[tail++ % 8] = cur;
+				nums[tail++ % N] = cur;
 				sub = (sub % 5) + 1;
 			}
 			
 			sb.append('#').append(tc).append(' ');
-			for(int i = 0; i < 8; i++) {
-				sb.append(nums[(head + i) % 8]).append(' ');
+			for(int i = 0; i < N; i++) {
+				sb.append(nums[(head + i) % N]).append(' ');
 			}
 			sb.append('\n');
 		}
