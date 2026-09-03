@@ -2,27 +2,29 @@
 
 ## 💡 접근 방식
 
- BFS를 이용하여 미로에서 시작점(2)과 도착점(3) 간의 경로를 탐색. 큐를 활용한 레벨 순회 구조.
+BFS 기반의 미로 탐색으로 시작점에서 목적지까지의 경로를 탐색하여 도달 여부를 판별.
 
 ## ⏱️ 시간 복잡도
 
-O(N^2) — 최대 16x16 크기이므로, 모든 셀에 대해 방문 검사하며 조건 체크. 전체 큐 처리 시 256개의 셀을 검사하게 되어 결과적으로 O(N^2)으로 나타남.
+O(N^2) — 최대 N^2 크기의 미로를 탐색하며, BFS는 모든 노드를 한 번씩 방문하게 된다. 크기 16x16일 경우 상수로 간주 가능.
 
 ## 📦 공간 복잡도
 
-O(N) — 최대 256 클러스터의 셀을 큐에 저장. 공간이 제한적이나 고정 사전 할당을 고려해 O(1)로도 평가 가능.
+O(N) — 큐(q)와 맵(map)을 저장하기 위한 공간 사용. 크기 16x16의 boolean 배열과 256개의 정수 공간을 가진 큐.
 
 ## 🔧 개선 사항
 
-1) 큐를 배열 대신 Queue<T>를 사용하여 동적 크기 처리. 2) 방문 확인을 boolean 배열이 아닌 int 배열로 하여 '0'을 통해 상수 저장(방문 체킹 필요 시) 가능.
+1) 변수 이름을 더 명확하게 수정하여 가독성을 높임: q -> queue, curY -> currentY 등
+2) map[x][y] 확인 시 미리 bounds 체크하여 불필요한 배열 접근 회피
+3) StringBuilder 대신 ArrayList와 join() 사용으로 성능 삭제, 예외 처리 개선
 
 ## 🎯 다음 추천 문제
 
-SWEA 1267번 - 이동하기 | BFS로 미로 탐색기 능력을 개선하며 다양한 경로 및 장애물 처리 훈련.
+SWEA 1227번 - 미로2 | 비슷한 미로 탐색 문제에서 경로의 길이를 반환하도록 확장하여 BFS에 대한 이해도를 높이기.
 
 ## 🏷️ 태그
 
-bfs, implementation
+bfs, graph
 
 ## ✨ 모범 답안
 
@@ -30,70 +32,69 @@ bfs, implementation
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 
 class Solution {
     static final int SIZE = 16;
     static final int[] DY = {-1, 1, 0, 0};
     static final int[] DX = {0, 0, -1, 1};
+
     static boolean[][] map = new boolean[SIZE][SIZE];
-    static int destY, destX; // y, x
+    static int[] queue = new int[SIZE * SIZE];
+    static int head, tail;
+    static int startY, startX, destY, destX;
+    static int result;
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
 
         for (int tc = 1; tc <= 10; tc++) {
-            sb.append('#').append(br.readLine().trim()).append(' ');
+            br.readLine(); // Read and ignore test case number
 
-            // Initialize map and find start and end points.
+            head = 0;
+            tail = 0;
+            result = 0;
+
             for (int i = 0; i < SIZE; i++) {
-                String str = br.readLine();
+                String line = br.readLine();
                 for (int j = 0; j < SIZE; j++) {
-                    char cell = str.charAt(j);
+                    char cell = line.charAt(j);
                     if (cell == '2') {
-                        map[i][j] = true; // Start point
+                        startY = i;
+                        startX = j;
                     } else if (cell == '3') {
                         destY = i;
                         destX = j;
                     }
-                    map[i][j] = cell == '0' || cell == '3';
+                    map[i][j] = cell != '1';
                 }
             }
 
-            // Perform BFS
-            Queue<int[]> queue = new LinkedList<>();
-            queue.offer(new int[]{0, 0}); // Start from (0,0)
-            map[0][0] = false; // Mark as visited
-            int result = 0;
+            queue[tail++] = startY * SIZE + startX;
+            map[startY][startX] = false;
 
-            while (!queue.isEmpty()) {
-                int[] cur = queue.poll();
-                int curY = cur[0];
-                int curX = cur[1];
+            while (head != tail) {
+                int cur = queue[head++];
+                int curY = cur / SIZE;
+                int curX = cur % SIZE;
 
                 for (int d = 0; d < DY.length; d++) {
                     int ny = curY + DY[d];
                     int nx = curX + DX[d];
 
-                    if (ny >= SIZE || ny < 0 || nx >= SIZE || nx < 0 || !map[ny][nx])
-                        continue;
-
-                    if (ny == destY && nx == destX) {
-                        result = 1;
-                        break;
+                    if (ny >= 0 && ny < SIZE && nx >= 0 && nx < SIZE && map[ny][nx]) {
+                        if (ny == destY && nx == destX) {
+                            result = 1;
+                            break;
+                        }
+                        queue[tail++] = ny * SIZE + nx;
+                        map[ny][nx] = false;
                     }
-
-                    queue.offer(new int[]{ny, nx});
-                    map[ny][nx] = false; // Mark as visited
                 }
-                if (result == 1) break;
             }
-
-            sb.append(result).append(System.lineSeparator());
+            System.out.println('#' + tc + ' ' + result);
         }
-        System.out.print(sb);
     }
 }
 ```

@@ -9,10 +9,9 @@ class Solution
 	static final int[] DX = {0, 0, -1, 1};
 	
 	static boolean[][] map = new boolean[SIZE][SIZE];
-	static int[] xq;
-	static int[] yq;
+	static int[] q = new int[SIZE * SIZE];
 	static int head, tail;
-	static int destY, destX; // y, x
+	static int startY, startX, destY, destX; // y, x
 	static int result;
 
 	public static void main(String[] args) throws IOException {
@@ -23,42 +22,42 @@ class Solution
 			// 불필요한 테스트케이스 번호 입력 처리
 			sb.append('#').append(br.readLine().trim()).append(' ');
 			
-			yq = new int[SIZE * SIZE + 1];
-			xq = new int[SIZE * SIZE + 1];
-			
 			head = 0;
 			tail = 0;
 			
 			result = 0;
 			
 			for(int i = 0; i < SIZE; i++) {
-				String str = br.readLine();
+				String line = br.readLine();
 				for(int j = 0; j < SIZE; j++) {
-					char cell = str.charAt(j);
+					char cell = line.charAt(j);
 					if (cell == '2') {
-						yq[tail] = i;
-						xq[tail] = j;
-						tail = (tail + 1) % SIZE;
+						startY = i;
+						startX = j;
 					} else if (cell == '3') {
 						destY = i;
 						destX = j;
 					}
 					// map의 true는 길, false는 그 외
-					map[i][j] = cell == '0' || cell == '3';
+					map[i][j] = cell != '1';
 				}
 			}
 			
+			q[tail++] = startY * SIZE + startX;
+			map[startY][startX] = false;
+			
 			outer:
 			while(head != tail) {
-				int curY = yq[head];
-				int curX = xq[head++];
+				int cur = q[head++];
+				int curY = cur / SIZE; // cur은 16 * y + x. 이 때 x는 16 미만
+				int curX = cur % SIZE;
 				
 				int ny, nx;
 				for(int d = 0; d < DY.length; d++) {
 					ny = curY + DY[d];
 					nx = curX + DX[d];
 					
-					if(ny >= SIZE || ny < 0 || nx >= SIZE || nx < 0 || !map[ny][nx])
+					if(ny >= SIZE - 1 || ny < 1 || nx >= SIZE + 1 || nx < 1 || !map[ny][nx])
 						continue;
 					
 					if (ny == destY && nx == destX) {
@@ -66,8 +65,7 @@ class Solution
 						break outer;
 					}
 					
-					yq[tail] = ny;
-					xq[tail++] = nx;
+					q[tail++] = ny * SIZE + nx;
 					map[ny][nx] = false;
 				}
 			}
