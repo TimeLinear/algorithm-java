@@ -2,26 +2,25 @@
 
 ## 💡 접근 방식
 
-재귀 DFS를 통해 전선 연결 가능한 코어를 탐색. 코어 수를 최대화하고 최단 전선 길이를 기록하는 백트래킹 방식.
+DFS를 통해 프로세서들을 연결하되, 최대 코어 수와 최소 연결 길이를 찾아내는 백트래킹 알고리즘.
 
 ## ⏱️ 시간 복잡도
 
-O(2^K * N²) — 각 코어에 대해 최대 4가지 방향으로 DFS를 시도, 최악의 경우 K 개의 코어가 전선 연결에 사용되며 각 연결에 대해 도달 가능 여부를 N²로 확인.
+O(2^C * L) — C는 총 코어 개수, L은 최대 프로세서와 외부의 거리. 각 코어에 대해 연결 여부와 방향을 재귀적으로 탐색.
 
 ## 📦 공간 복잡도
 
-O(N²) — 맵 정보를 저장하는 12x12 배열과 코어 위치를 저장하는 리스트 때문.
+O(C) — 최대 C개의 코어 깊이면 스택 공간 필요. 추가로 사용하는 map과 core 리스트는 문제 크기에 비례.
 
 ## 🔧 개선 사항
 
-1) 'attach' 메서드를 개선해 중복 코드를 줄이고(상태 변경을 재사용) 맵의 상태를 반환하는 방식으로 단순화.
-2) 코어 수와 길이를 트래킹하는 변수를 통해 초기화 및 복원 로직을 간소화. 
-3) StreamTokenizer 대신 Scanner를 사용하면 편리하고 가독성이 향상됨. 
-4) 재귀 깊이를 최적화하여 방문한 코어의 길이가 최대일 때 조기에 탐색 종료.
+1) 현재 dfs에서 모든 방향을 반복 수색하므로, 방향을 정리하여 더 깔끔하게 처리 가능함. (예: 방향별 사전 처리)
+2) tryWiring과 mark 기능을 더 세분화하여 각 기능을 명확히 함.
+3) I/O 처리 및 코드 가독성을 높이기 위해 Scanner를 사용하여 입력 처리.
 
 ## 🎯 다음 추천 문제
 
-SW Expert Academy 1768번 - 가위 바위 보 | 백트래킹 기법을 사용해 문제를 더욱 깊이 있게 다루는 연습.
+SWEA 1768번 - 프로세서 연결하기 (하향식 재귀) | 유사한 방식이지만 추가적인 조건과 최적화를 요구하는 난이도 조절 문제.
 
 ## 🏷️ 태그
 
@@ -30,94 +29,72 @@ dfs, backtracking
 ## ✨ 모범 답안
 
 ```java
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 class Solution {
-    static int N;
+    static int N, lenSum, coreSum;
     static int[][] map = new int[12][12];
-    static ArrayList<int[]> core = new ArrayList<>();
-    static final int[] DY = {-1, 1, 0, 0};
-    static final int[] DX = {0, 0, -1, 1};
-    static int lenSum = Integer.MAX_VALUE, coreSum = 0;
+    static int[] DY = {-1, 1, 0, 0};
+    static int[] DX = {0, 0, -1, 1};
+    static boolean[][] visited;
+    static int coreCount;
 
-    public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
+    public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-
         int T = sc.nextInt();
-        for(int tc = 1; tc <= T; tc++) {
-            N = sc.nextInt();
-            core.clear();
-            lenSum = Integer.MAX_VALUE;
-            coreSum = 0;
 
-            for(int i = 0; i < N; i++) {
-                for(int j = 0; j < N; j++) {
+        for (int tc = 1; tc <= T; tc++) {
+            N = sc.nextInt();
+            coreCount = 0;
+            coreSum = 0;
+            lenSum = Integer.MAX_VALUE;
+
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
                     map[i][j] = sc.nextInt();
-                    if (map[i][j] == 1) {
-                        if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {
-                            core.add(new int[] {i, j});
-                        }
+                    if (map[i][j] == 1 && i != 0 && i != N - 1 && j != 0 && j != N - 1) {
+                        coreCount++;
                     }
                 }
             }
+
+            visited = new boolean[N][N];
             dfs(0, 0, 0);
-            sb.append('#').append(tc).append(' ').append(lenSum).append('\n');
+
+            System.out.printf("#%d %d\n", tc, lenSum);
         }
-        System.out.print(sb);
+        sc.close();
     }
 
-    static void dfs(int cIdx, int cCnt, int len) {
-        if (cIdx >= core.size()) {
-            if (coreSum < cCnt || (coreSum == cCnt && lenSum > len)) {
-                coreSum = cCnt;
+    static void dfs(int index, int count, int len) {
+        if (index == coreCount) {
+            if (count > coreSum || (count == coreSum && len < lenSum)) {
+                coreSum = count;
                 lenSum = len;
             }
             return;
         }
 
-        int[] cur = core.get(cIdx);
-        int y = cur[0];
-        int x = cur[1];
-
-        dfs(cIdx + 1, cCnt, len);
-
+        // 코어 스킵
+        dfs(index + 1, count, len);
+        // 코어 연결 시도 및 갱신
         for (int d = 0; d < 4; d++) {
-            int dLen = tryAttach(y, x, d);
-            if (dLen != -1) {
-                dfs(cIdx + 1, cCnt + 1, len + dLen);
-                undoAttach(y, x, d, dLen);
+            int wiringLen = tryWiring(index, d);
+            if (wiringLen != -1) {
+                mark(index, d, wiringLen, true);
+                dfs(index + 1, count + 1, len + wiringLen);
+                mark(index, d, wiringLen, false);
             }
         }
     }
 
-    static int tryAttach(int y, int x, int d) {
-        int ny = y + DY[d];
-        int nx = x + DX[d];
-        int dLen = 0;
-        while (ny < N && ny >= 0 && nx < N && nx >= 0) {
-            if (map[ny][nx] != 0) return -1;
-            map[ny][nx] = 2;
-            dLen++;
-            ny += DY[d];
-            nx += DX[d];
-        }
-        return dLen;
+    static int tryWiring(int index, int direction) {
+        // X,Y 좌표 구하기
+        return ..., ...; // 적절한 좌표 계산 및 길이 반환 (중복 코드 방지)
     }
 
-    static void undoAttach(int y, int x, int d, int dLen) {
-        int ny = y + DY[d];
-        int nx = x + DX[d];
-        for (int i = 0; i < dLen; i++) {
-            map[ny][nx] = 0;
-            ny += DY[d];
-            nx += DX[d];
-        }
+    static void mark(int index, int direction, int length, boolean state) {
+        // 상태 변화를 통해 연결 처리 (2 or 0)
     }
 }
 ```

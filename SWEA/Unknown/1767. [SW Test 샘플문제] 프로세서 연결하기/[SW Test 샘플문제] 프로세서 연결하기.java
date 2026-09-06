@@ -31,14 +31,12 @@ class Solution
 				for(int j = 0; j < N; j++) {
 					in.nextToken();
 					map[i][j] = (int) in.nval;
-					if ((int) in.nval == 1) {
-						if (i == 0 || i == N - 1 || j == 0 || j == N - 1) {
-							continue;
-						}
+					if (map[i][j] == 1 && (i != 0 && i != N - 1 && j != 0 && j != N - 1)) {
 						core.add(new int[] {i, j});
 					}
 				}
 			}
+			
 			dfs(0, 0, 0);
 			
 			sb.append('#').append(tc).append(' ').append(lenSum).append('\n');
@@ -47,55 +45,54 @@ class Solution
 	}
 	
 	static void dfs(int cIdx, int cCnt, int len) {
-		if(cIdx >= core.size()) {
-			if (coreSum < cCnt) {
+		int remain = core.size() - cIdx;
+		// 코어 수로 가지치기
+		if (cCnt + remain < coreSum) return;
+		
+		if(cIdx == core.size()) {
+			if (cCnt > coreSum || (cCnt == coreSum && len < lenSum)) {
 				coreSum = cCnt;
 				lenSum = len;
-			} else if (coreSum == cCnt) {
-				if (lenSum > len) {
-					lenSum = len;
-				}
 			}
 			return;
 		}
 		
-		int[] cur = core.get(cIdx);
-	    int y = cur[0];
-	    int x = cur[1];
+		dfs(cIdx + 1, cCnt, len); // 코어 스킵
 		
-		dfs(cIdx + 1, cCnt, len);
+		int y = core.get(cIdx)[0];
+        int x = core.get(cIdx)[1];
 		
 		for(int d = 0; d < 4; d++) {
-			int ny = y + DY[d];
-			int nx = x + DX[d];
+			int dLen = tryWiring(y, x, d);
+			if (dLen == -1) continue;
 			
-			while (ny < N && ny >= 0 && nx < N && nx >= 0 && map[ny][nx] == 0) {
-				if (ny == 0 || ny == N - 1 || nx == 0 || nx == N - 1) {
-					int dLen = attach(y, x, d, true);
-					dfs(cIdx + 1, cCnt + 1, len + dLen);
-					attach(y, x, d, false);
-					break;
-				}
-				ny = ny + DY[d];
-				nx = nx + DX[d];
-			}
+			mark(y, x, d, dLen, 2);
+			dfs(cIdx + 1, cCnt + 1, len + dLen);
+			mark(y, x, d, dLen, 0);
 		}
 	}
 	
-	static int attach(int y, int x, int d, boolean connect) {
-		int ny = y + DY[d];
-		int nx = x + DX[d];
-		int dLen = 0;
-		while (ny < N && ny >= 0 && nx < N && nx >= 0) {
-			if (connect) {
-				map[ny][nx] = 2;
-			} else {
-				map[ny][nx] = 0;
-			}
-			dLen++;
-			ny = ny + DY[d];
-			nx = nx + DX[d];
-		}
-		return dLen;
+	static int tryWiring(int y, int x, int d) {
+		int ny = y;
+		int nx = x;
+		int len = 0;
+		
+		// 이미 벽면에 붙은 core는 걸러낸 뒤
+		while (true) {
+            ny += DY[d];
+            nx += DX[d];
+            if (map[ny][nx] != 0) return -1;
+            len++;
+            if (ny == 0 || ny == N - 1 || nx == 0 || nx == N - 1) return len;
+        }
+	}
+	
+	static void mark(int y, int x, int d, int len, int val) {
+		int ny = y, nx = x;
+        for (int i = 0; i < len; i++) {
+            ny += DY[d];
+            nx += DX[d];
+            map[ny][nx] = val;
+        }
 	}
 }
