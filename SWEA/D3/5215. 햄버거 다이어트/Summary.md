@@ -2,29 +2,28 @@
 
 ## 💡 접근 방식
 
-DFS를 통해 모든 음식 조합을 탐색, 제한 칼로리 내에서 최대 맛을 찾음. 각 음식에 대해 선택 여부를 결정.
+주어진 재료(N개)로 최대 맛(taste)과 제한 칼로리(L) 사이의 최적 조합을 찾기 위해 0-1 배낭 문제 방식으로 동적 계획법 사용.
 
 ## ⏱️ 시간 복잡도
 
-O(2^N) — N개의 음식을 선택/미선택할 수 있는 모든 조합 탐색. N=20이면 최대 1,048,576 경우의 수로 비효율적.
+O(N * L) — N개의 재료에 대해 각 칼로리 자극(L) 여부를 확인하는 2중 루프 사용.
 
 ## 📦 공간 복잡도
 
-O(N) — 재귀 호출에 의한 스택 깊이, 일부 변수들을 저장. 그러나 주어진 음식 및 칼로리 데이터는 고정적이므로 여기에 치우침.
+O(L) — DP 배열(dp)은 칼로리 제한만큼의 크기를 가지며 추가적인 메모리 사용은 없음.
 
 ## 🔧 개선 사항
 
-1) DFS 대신 비트마스크 조합을 사용하여 조합 수를 효율적으로 처리할 수 있습니다.
-2) 음식 선택 시, 이미 선택된 칼로리를 재계산할 필요 없이 결과를 모아서 바로 출력하는 방식으로 변경.
-3) 맛과 칼로리를 한 번에 처리하기 위한 테이블을 이용하여, 중복 계산을 줄이고 각 조합에 대한 계산을 직접적으로 최적화.
+1) StreamTokenizer 대신 BufferedReader와 String.split()을 사용해 입력 유연성 및 가독성 개선.
+2) dp 배열의 크기를 L+1로 설정하여 범위 초과를 방지하고 1차원 인덱스 사용에서 2차원 배열 불필요. 3) 결과 출력을 System.out.println()으로 간결하게 변경하고 StringBuilder 제거.
 
 ## 🎯 다음 추천 문제
 
-백준 14889번 - 스타트와 링크 | DFS를 활용한 조합 생성 문제 with 최적화 연습.
+백준 12865번 - 평범한 배낭 | 0-1 배낭 문제의 유사한 포맷을 여러 번 연습하면서 문제 해결 능력 강화.
 
 ## 🏷️ 태그
 
-dfs, implementation
+dynamic-programming, implementation
 
 ## ✨ 모범 답안
 
@@ -35,37 +34,35 @@ import java.io.InputStreamReader;
 
 class Solution {
     static int N, L;
-    static int[][] food;
-    static int result;
+    static int[] taste;
+    static int[] kalory;
 
     public static void main(String[] args) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
-        int T = Integer.parseInt(in.readLine());
-        
-        for (int tc = 1; tc <= T; tc++) {
-            String[] inputs = in.readLine().split();
-            N = Integer.parseInt(inputs[0]);
-            L = Integer.parseInt(inputs[1]);
-            food = new int[N][2];
-            result = 0;
-            
-            for (int i = 0; i < N; i++) {
-                inputs = in.readLine().split();
-                food[i][0] = Integer.parseInt(inputs[0]);
-                food[i][1] = Integer.parseInt(inputs[1]);
-            }
-            calculateMaxTaste(0, 0, 0);
-            sb.append('#').append(tc).append(' ').append(result).append('\n');
-        }
-        System.out.print(sb);
-    }
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        int T = Integer.parseInt(br.readLine());
 
-    static void calculateMaxTaste(int idx, int taste, int kalory) {
-        if (kalory > L) return;
-        result = Math.max(result, taste);
-        for (int i = idx; i < N; i++) {
-            calculateMaxTaste(i + 1, taste + food[i][0], kalory + food[i][1]);
+        for (int tc = 1; tc <= T; tc++) {
+            String[] input = br.readLine().split(" ");
+            N = Integer.parseInt(input[0]);
+            L = Integer.parseInt(input[1]);
+
+            taste = new int[N];
+            kalory = new int[N];
+
+            for (int i = 0; i < N; i++) {
+                input = br.readLine().split(" ");
+                taste[i] = Integer.parseInt(input[0]);
+                kalory[i] = Integer.parseInt(input[1]);
+            }
+
+            int[] dp = new int[L + 1];
+            for (int i = 0; i < N; i++) {
+                for (int j = L; j >= kalory[i]; j--) {
+                    dp[j] = Math.max(dp[j], dp[j - kalory[i]] + taste[i]);
+                }
+            }
+
+            System.out.println('#' + tc + ' ' + dp[L]);
         }
     }
 }

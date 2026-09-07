@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-dfs, implementation
+dynamic-programming, implementation
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-09-08 01:38:13
+2026-09-08 01:45:49
 
