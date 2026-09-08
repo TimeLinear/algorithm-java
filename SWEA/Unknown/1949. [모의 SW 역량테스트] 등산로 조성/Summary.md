@@ -2,29 +2,29 @@
 
 ## 💡 접근 방식
 
-최고 높이의 봉우리를 기준으로 깊이 우선 탐색(DFS)을 사용하여 내리막 길을 탐색하고, 최대 길이를 기록.
+시작점에서 DFS를 활용해 등산로 길이를 계산. 높이차가 K 이하인 경우 평지에서 깎으며 진행 후 최대 길이 기록.
 
 ## ⏱️ 시간 복잡도
 
-O(N^2 * (N^2 + 4)) — N² 개의 봉우리에서 시작된 DFS 호출이 최악의 경우 모든 방향(상하좌우)으로 탐색. 각 DFS 호출이 상태를 업데이트하므로, 깊이는 최대 N²에 도달 가능.
+O(N^2 * DFS) — 각 시작점에서 DFS를 통해 최대 N^2 번 방문 가능, 깊이가 K까지 갈 수 있어 최악의 경우 O(N^2 * K)이다.
 
 ## 📦 공간 복잡도
 
-O(N²) — visited 배열과 재귀 호출 스택 때문에 최악의 경우 방문한 위치를 기록하므로 NxN 저장 공간 필요.
+O(N^2) — visited 배열과 최대 깊이로 쓰이는 스택 공간이 따르며 K 사용 시 O(N) 추가 공간 필요.
 
 ## 🔧 개선 사항
 
-1) visited 처리를 비트마스크 대신 boolean 배열을 사용하는 것이 가독성 증가.
-2) DFS 메서드의 인자에서 현재 위치 대신 방향 변수를 사용하여 중복된 코드 줄이기.
-3) map 배열 사용하는 대신 int[][]를 활용해 히스토리를 줄이고 클린 코드를 위해 메서드 분리.
+1) visited 배열에 비트를 직접 사용해 공간 절약: boolean 배열 대신 int 배열과 비트 마스킹 활용.
+2) 불필요한 깊이는 따로 트리밍 (depth 한계 설정 가능).
+3) DFS 최적화: 방문 시 들어가기 전 미리 조건 체크하여 무분별한 재귀 호출 방지.
 
 ## 🎯 다음 추천 문제
 
-백준 16236번 - 아기 상어 | DFS/BFS와 경로탐색을 통한 그래프 탐험 성격의 문제로 연습.
+SW Expert 1948번 - 사각형 방 | DFS를 활용해 모든 경로를 탐색하는 유사한 기법으로 추가 학습 가능.
 
 ## 🏷️ 태그
 
-dfs, backtracking
+dfs, implementation
 
 ## ✨ 모범 답안
 
@@ -32,9 +32,9 @@ dfs, backtracking
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StreamTokenizer;
 
-class Solution
-{
+class Solution {
     static int N, K;
     static int[][] map = new int[8][8];
     static int maxLen;
@@ -43,43 +43,47 @@ class Solution
     static final int[] DX = {0, 0, -1, 1};
 
     public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StreamTokenizer in = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
         StringBuilder sb = new StringBuilder();
-        int T = Integer.parseInt(br.readLine());
 
-        for (int tc = 1; tc <= T; tc++) {
-            String[] tokens = br.readLine().split();
-            N = Integer.parseInt(tokens[0]);
-            K = Integer.parseInt(tokens[1]);
+        in.nextToken();
+        int T = (int) in.nval;
+
+        for(int tc = 1; tc <= T; tc++) {
+            in.nextToken();
+            N = (int) in.nval;
+            in.nextToken();
+            K = (int) in.nval;
+
             maxLen = 0;
             visited = new boolean[N][N];
-
             int maxVal = 0;
-            for (int i = 0; i < N; i++) {
-                String[] row = br.readLine().split();
-                for (int j = 0; j < N; j++) {
-                    map[i][j] = Integer.parseInt(row[j]);
+            for(int i = 0; i < N; i++) {
+                for(int j = 0; j < N; j++) {
+                    in.nextToken();
+                    map[i][j] = (int) in.nval;
                     if (map[i][j] > maxVal) maxVal = map[i][j];
                 }
             }
 
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < N; j++) {
+            for(int i = 0; i < N; i++) {
+                for(int j = 0; j < N; j++) {
                     if (map[i][j] == maxVal) {
                         dfs(i, j, 1, false);
                     }
                 }
             }
+
             sb.append('#').append(tc).append(' ').append(maxLen).append('\n');
         }
         System.out.print(sb);
     }
 
     static void dfs(int y, int x, int curLen, boolean k_used) {
-        maxLen = Math.max(maxLen, curLen);
+        if (maxLen < curLen) maxLen = curLen;
         visited[y][x] = true;
 
-        for (int d = 0; d < 4; d++) {
+        for(int d = 0; d < 4; d++) {
             int ny = y + DY[d];
             int nx = x + DX[d];
 
@@ -87,11 +91,10 @@ class Solution
 
             if (map[ny][nx] < map[y][x]) {
                 dfs(ny, nx, curLen + 1, k_used);
-            } else if ((map[ny][nx] - K) < map[y][x] && !k_used) {
-                int tmp = map[ny][nx];
+            } else if (map[ny][nx] - K < map[y][x] && !k_used) {
                 map[ny][nx] = map[y][x] - 1;
                 dfs(ny, nx, curLen + 1, true);
-                map[ny][nx] = tmp;
+                map[ny][nx] = map[ny][nx] + 1;
             }
         }
         visited[y][x] = false;
