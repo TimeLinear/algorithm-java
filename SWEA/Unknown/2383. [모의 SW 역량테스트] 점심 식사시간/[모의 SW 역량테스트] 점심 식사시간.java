@@ -4,7 +4,6 @@ import java.io.InputStreamReader;
 import java.io.StreamTokenizer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 class Solution
@@ -14,7 +13,6 @@ class Solution
 	static ArrayList<int[]> people;
 	static ArrayList<int[]> stairs;
 	static int[] moveTime1, moveTime2;
-	static int[] dp; // 조합 별 최소시간 기록;
 	static int result;
 	
 	public static void main(String[] args) throws IOException {
@@ -29,13 +27,11 @@ class Solution
 		stairs = new ArrayList<>(2); // y, x, 시간
 		moveTime1 = new int[10];
 		moveTime2 = new int[10];
-		dp = new int[(1 << 10)];
 		
 		for(int tc = 1; tc <= T; tc++) {
 			in.nextToken();
 			N = (int) in.nval;
 			
-			Arrays.fill(dp, -1);
 			people.clear();
 			stairs.clear();
 			
@@ -57,8 +53,10 @@ class Solution
 			// 단, 계단 이동 시간은 합치지 않음. 도착한다고 이동 가능하단 보장이 없으므로 두 시간을 나눠놓기
 			calcMoveTime();
 			
-			// 이제 각 시간들을 각 계단에 배정하면서, 각 계단에서 소요된 시간 중 최대값이 가장 작으면 끝.
-			dfs(0, 0, 0);
+			int comboCount = 1 << people.size();
+			for (int flag = 0; flag < comboCount; flag++) {
+				result = Math.min(result, scheduling(flag));
+			}
 			
 			sb.append('#').append(tc).append(' ').append(result).append('\n');
 		}
@@ -77,31 +75,7 @@ class Solution
 		}
 	}
 	
-	// cnt : 계단에 배정한 사람 수
-	// flag : 사람 별 배정 상태(0 = 1번 계단, 1 = 2번 계단)
-	// curTime : 현 상태로 총 걸린 시간
-	static void dfs(int cnt, int flag, int curTime) {
-		int pSize = people.size();
-		
-		if(cnt == pSize) {
-			result = Math.min(result, curTime);
-			return;
-		}
-		
-		// 1번 계단에 배정
-		int time1 = scheduling(flag);
-		dfs(cnt + 1, flag, time1);
-		
-		// 2번 계단에 배정
-		int time2 = scheduling(flag | (1 << cnt));
-		dfs(cnt + 1, flag | (1 << cnt), time2);
-	}
-	
 	static int scheduling(int flag) {
-		if(dp[flag] != -1) {
-			return dp[flag];
-		}
-		
 		int size2 = Integer.bitCount(flag); // 2번 계단 배정 인원
 		int size1 = people.size() - size2; // 1번 계단 배정 인원
 		ArrayList<Integer> schedule1 = new ArrayList<>(size1);
@@ -122,9 +96,7 @@ class Solution
 		int sum1 = calcStairTime(schedule1, stairs.get(0)[2]);
 		int sum2 = calcStairTime(schedule2, stairs.get(1)[2]);
 		
-		dp[flag] = Math.max(sum1, sum2);
-		
-		return dp[flag];
+		return Math.max(sum1, sum2);
 	}
 	
 	static int calcStairTime(ArrayList<Integer> arrivals, int climbTime) {

@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-bfs, dfs, dynamic-programming
+implementation, graph, bfs
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-09-11 00:09:47
+2026-09-11 01:04:09
 
