@@ -2,29 +2,29 @@
 
 ## 💡 접근 방식
 
-DFS로 조합을 탐색하여 총합이 목표 B 이상일 때의 최소 차이 계산. 모든 조합을 고려해 최적해를 찾음.
+재귀적 깊이 우선 탐색(DFS)을 통해 모든 조합의 합을 계산하여 목표 높이 B에 대한 최소 차이를 찾음.
 
 ## ⏱️ 시간 복잡도
 
-O(2^N) — N개의 조합을 모두 탐색하는 경로가 존재하며, 각 원소를 포함할지 말지를 결정한다. 최악의 경우 모든 조합 생성에 2^N 시간 소요.
+O(2^N) — 각 보조원 선택 여부에 따라 두 가지 경로를 가지므로 지수적 시간 복잡도. N이 20 이하로 제한되어 있으나, 최악의 경우 모든 조합을 생성해야 함.
 
 ## 📦 공간 복잡도
 
-O(N) — 재귀 호출 스택과 같은 추가 공간은 최대 N에 비례. 조합의 길이가 N이기 때문.
+O(N) — 재귀 스택 최대 깊이에 의해 N만큼의 공간을 사용함. 변수가 아닌 특정한 추가 구조는 없음.
 
 ## 🔧 개선 사항
 
-1) DFS 대신 비트 마스크를 활용하여 조합을 생성할 수 있습니다. 이는 코드의 명시성을 높이고 중복 탐색을 피해 성능 개선 가능.
-2) minDiff를 업데이트하는 조건문은 중복 호출을 줄이고 명확히 할 수 있습니다.
-3) 입력을 한 번 받고, 배열을 더 적게 사용하도록 하여 메모리 효율성을 높이세요.
+1) 조기 종료 조건 추가: 현재 total이 minDiff보다 크면 재귀를 중단해 불필요한 호출 방지.
+2) 중복 합계 계산을 피하기 위해 전체 합을 미리 계산 후 B에 가까운 총합을 찾도록 변경.
+3) 표준 출력 개선: 배열을 이용해 각 테스트 케이스의 결과를 모은 후 한 번에 출력.
 
 ## 🎯 다음 추천 문제
 
-SWEA 1487번 - 장훈이의 낮은 선반 | 비슷한 조합 및 차이 계산을 활용한 문제로 연습.
+SWEA 1487번 - 엘리베이터 | 조합 문제의 변형으로, 제한 조건의 조합 및 빠른 탐색 학습.
 
 ## 🏷️ 태그
 
-dfs, backtracking
+recursive, backtracking, implementation
 
 ## ✨ 모범 답안
 
@@ -33,44 +33,39 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
-class Solution {
+class Solution
+{
     static int N, B;
     static int[] assistants = new int[20];
     static int minDiff;
-    
-    private static void calculateMinDiff() {
-        for (int mask = 0; mask < (1 << N); mask++) {
-            int total = 0;
-            for (int i = 0; i < N; i++) {
-                if ((mask & (1 << i)) != 0) {
-                    total += assistants[i];
-                }
-            }
-            if (total >= B) {
-                minDiff = Math.min(minDiff, total - B);
-            }
+
+    private static void dfs(int n, int total) {
+        if (total >= B) {
+            minDiff = Math.min(minDiff, total - B);
+            return;
         }
+        if (n == N || total + assistants[n] > minDiff) return;
+        dfs(n + 1, total + assistants[n]);
+        dfs(n + 1, total);
     }
-    
+
     public static void main(String args[]) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         int T = Integer.parseInt(br.readLine());
-        StringTokenizer st;
-        
+        StringBuilder result = new StringBuilder();
         for(int tc = 1; tc <= T; tc++) {
-            st = new StringTokenizer(br.readLine());
+            StringTokenizer st = new StringTokenizer(br.readLine());
             N = Integer.parseInt(st.nextToken());
             B = Integer.parseInt(st.nextToken());
             minDiff = Integer.MAX_VALUE;
-            
             st = new StringTokenizer(br.readLine());
             for(int i = 0; i < N; i++) {
                 assistants[i] = Integer.parseInt(st.nextToken());
             }
-            
-            calculateMinDiff();
-            System.out.println("#" + tc + " " + minDiff);
+            dfs(0, 0);
+            result.append('#').append(tc).append(' ').append(minDiff).append('\n');
         }
+        System.out.print(result);
     }
 }
 ```
