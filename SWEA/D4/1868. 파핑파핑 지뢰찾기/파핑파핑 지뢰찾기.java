@@ -1,29 +1,31 @@
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Queue;
 
 class Solution {
 	static int N, totalCnt;
 	static boolean[][] bombMap = new boolean[300][300];
 	static boolean[][] zeroMap = new boolean[300][300];
 	static boolean[][] visited = new boolean[300][300];
-	static List<int[]> targets = new ArrayList<>();
+	static int[] q = new int[300 * 300];
 	static final int[] dr = {0, 1, 1, 1, 0, -1, -1, -1};
 	static final int[] dc = {1, 1, 0, -1, -1, -1, 0, 1};
 
 	public static void main(String[] args) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		byte[] buf = new byte[1 << 16];
+		int len;
+		while ((len = System.in.read(buf)) > 0) {
+			bos.write(buf, 0, len);
+		}
+		String[] input = new String(bos.toByteArray()).split("\n");
 		StringBuilder sb = new StringBuilder();
+		int strIdx = 0;
 		
-		int T = Integer.parseInt(br.readLine());
+		int T = Integer.parseInt(input[strIdx++].trim());
 		
 		for(int tc = 1; tc<= T; tc++) {
-			N = Integer.parseInt(br.readLine());
+			N = Integer.parseInt(input[strIdx++].trim());
 			totalCnt = 0;
 			
 			for(int i = 0; i < N; i++) {
@@ -31,13 +33,12 @@ class Solution {
 				Arrays.fill(zeroMap[i], 0, N, false);
 				Arrays.fill(visited[i], 0, N, false);
 			}
-			targets.clear();
 			
 			for(int i = 0; i < N; i++) {
-				String line = br.readLine();
+				String line = input[strIdx++];
 				for(int j = 0; j < N; j++) {
 					// true면 폭탄, false면 빈 칸
-					bombMap[i][j] = line.charAt(j) == '*' ? true : false;
+					bombMap[i][j] = line.charAt(j) == '*';
 					if (!bombMap[i][j]) {
 						totalCnt++;
 					}
@@ -46,62 +47,60 @@ class Solution {
 			
 			for(int i = 0; i < N; i++) {
 				for(int j = 0; j < N; j++) {
-					if (bombMap[i][j]) continue;
-					zeroMap[i][j] = !bombMap[i][j] && countSurrounds(i, j) == 0;
-					if (zeroMap[i][j]) targets.add(new int[] {i, j});
+					zeroMap[i][j] = !bombMap[i][j] && !hasBomb(i, j);
 				}
 			}
 			
+			// 폭탄 0인 칸 리스트 순회하며 클릭(bfs 함수) 처리
 			int cCnt = 0;
-			for(int[] pos : targets) {
-				if (visited[pos[0]][pos[1]]) continue;
-				cCnt++;
-				bfs(pos[0], pos[1]);
+			for(int i = 0; i < N; i++) {
+				for(int j = 0; j < N; j++) {
+					if (!zeroMap[i][j] || visited[i][j]) continue;
+					cCnt++;
+					bfs(i, j);
+				}
 			}
 
+			// 0인 칸만 다 채우면 나머진 일일히 눌러줘야하므로 즉시 남은 totalCnt 더하기
 			sb.append('#').append(tc).append(' ').append(cCnt + totalCnt).append('\n');
 		}
 		System.out.print(sb);
 	}
 
 	static void bfs(int r, int c) {
-		Queue<int[]> q = new ArrayDeque<>();
+		int head = 0, tail = 0;
 		
 		visited[r][c] = true;
 		totalCnt--;
-		q.add(new int[] {r, c});
+		q[tail++] = r * N + c;
 		
-		while(!q.isEmpty()) {
-			int[] cur = q.poll();
-			
-			if (!zeroMap[cur[0]][cur[1]]) continue;
+		while(head < tail) {
+			int cur = q[head++];
+			int cr = cur / N;
+			int cc = cur % N;
 			
 			for(int d = 0; d < 8; d++) {
-				int nr = cur[0] + dr[d];
-				int nc = cur[1] + dc[d];
+				int nr = cr + dr[d];
+				int nc = cc + dc[d];
 				
-				if (nr >= N || nr < 0 || nc >= N || nc < 0 || visited[nr][nc]) continue;
+				if (nr >= N || nr < 0 || nc >= N || nc < 0 || visited[nr][nc] || bombMap[nr][nc]) continue;
 				
-				if (bombMap[nr][nc] || visited[nr][nc]) continue;
 				visited[nr][nc] = true;
 				totalCnt--;
-				q.add(new int[] {nr, nc});
+				if (zeroMap[nr][nc]) q[tail++] = nr * N + nc;
 			}
 		}
 	}
 	
-	static int countSurrounds(int r, int c) {
-		int bCnt = 0;
+	static boolean hasBomb(int r, int c) {
 		for(int d = 0; d < 8; d++) {
 			int nr = r + dr[d];
 			int nc = c + dc[d];
-			
+ 
 			if (nr >= N || nr < 0 || nc >= N || nc < 0) continue;
-			
-			if (bombMap[nr][nc]) {
-				bCnt++;
-			}
+ 
+			if (bombMap[nr][nc]) return true;
 		}
-		return bCnt;
+		return false;
 	}
 }
