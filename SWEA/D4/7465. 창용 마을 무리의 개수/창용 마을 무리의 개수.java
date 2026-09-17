@@ -36,7 +36,7 @@ class Solution
 			
 			int cnt = 0;
 			for(int i = 1; i < N + 1; i++) {
-				int root = find(p[i]);
+				int root = find(i);
 				if (!roots[root]) {
 					roots[root] = true;
 					cnt++;

@@ -2,29 +2,29 @@
 
 ## 💡 접근 방식
 
-유니온 파인드 알고리즘을 사용하여 서로 연결된 집단을 추적하고, 최종적으로 서로 다른 루트(집단)의 수를 세는 방식.
+유니온-파인드 구조를 사용해 각 연결 성분의 루트 노드를 찾아 마을 무리의 개수를 카운트하는 방식.
 
 ## ⏱️ 시간 복잡도
 
-O(N + M) — N개의 노드와 M개의 엣지를 처리. union/find 방식의 경우 거의 상수 시간 복잡도에 가까움. 최악의 경우 반감에 따라 log-log 성질을 통해 O(M log* N)으로 간주.
+O(M * α(N)) — M개의 union 연산에서 각 find 연산은 효율적으로 이루어지므로 시간 복잡도는 거의 상수로 간주되는 아커만 함수의 역함수 α에 따라 간주할 수 있음.
 
 ## 📦 공간 복잡도
 
-O(N) — 집단을 표현하기 위한 배열과 기초 데이터 구조적 저장(부모 배열, 루트 추적 배열)으로 N 크기를 요구.
+O(N) — 배열 p와 roots를 사용하여 최대 N개의 요소를 저장하므로 O(N) 공간 복잡도.
 
 ## 🔧 개선 사항
 
-1) union 연산 수행 시 Union by Rank 기법을 사용하여 루트를 비교하고 더 작은 랭크에 연결하여 트리의 높이를 줄여 성능 개선.
-2) boolean 배열 대신 HashSet 등을 활용해 중복 확인 효율을 개선.
-3) 예외 처리를 통해 nextInt()의 예외를 처리하는 로직을 개선.
+1) union-find 최적화를 추가하여 경로 압축을 적용해 find() 성능 개선
+2) 메모리 사용을 줄이고 효율적인 I/O를 위해 BufferedReader 대신 Scanner를 고려해 input을 쉽게 관리할 수 있음
+3) try-catch 블록 없이 적절한 예외 처리를 통해 다음Int 메서드를 개선할 수 있음.
 
 ## 🎯 다음 추천 문제
 
-백준 1717번 - 집합의 표현 | 유사한 유니온 파인드 문제로 연습, 추가 쿼리 기능 연습.
+백준 1717번 - 집합의 표현 | 동일한 유니온-파인드 구조를 사용하여 집합의 연산을 다룸.
 
 ## 🏷️ 태그
 
-union-find, implementation
+union-find, graph
 
 ## ✨ 모범 답안
 
@@ -32,52 +32,54 @@ union-find, implementation
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
+import java.util.Arrays;
 
 class Solution {
-
-    static int[] p = new int[101];
+    static int N, M;
+    static int[] parent = new int[101];
 
     public static void main(String[] args) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringBuilder sb = new StringBuilder();
 
-        int T = Integer.parseInt(in.readLine());
-        for(int tc = 1; tc <= T; tc++) {
-            String[] tokens = in.readLine().split(" ");
-            int N = Integer.parseInt(tokens[0]);
-            int M = Integer.parseInt(tokens[1]);
+        int T = Integer.parseInt(br.readLine());
 
-            for(int i = 1; i <= N; i++) {
-                p[i] = i;
+        for (int tc = 1; tc <= T; tc++) {
+            String[] nm = br.readLine().split();
+            N = Integer.parseInt(nm[0]);
+            M = Integer.parseInt(nm[1]);
+
+            for (int i = 1; i <= N; i++) {
+                parent[i] = i;
             }
 
-            for(int i = 0; i < M; i++) {
-                tokens = in.readLine().split(" ");
-                int s1 = Integer.parseInt(tokens[0]);
-                int s2 = Integer.parseInt(tokens[1]);
+            for (int i = 0; i < M; i++) {
+                String[] pair = br.readLine().split();
+                int s1 = Integer.parseInt(pair[0]);
+                int s2 = Integer.parseInt(pair[1]);
                 union(s1, s2);
             }
 
-            HashSet<Integer> roots = new HashSet<>();
-            for(int i = 1; i <= N; i++) {
-                roots.add(find(p[i]));
-            }
-
-            sb.append('#').append(tc).append(' ').append(roots.size()).append('\n');
+            int rootCount = (int) Arrays.stream(parent)
+                                         .filter(x -> x == find(x)).count();
+            sb.append('#').append(tc).append(' ').append(rootCount).append('\n');
         }
         System.out.print(sb);
     }
 
     static int find(int x) {
-        if (p[x] != x) p[x] = find(p[x]);
-        return p[x];
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);
+        }
+        return parent[x];
     }
 
     static void union(int s1, int s2) {
         int r1 = find(s1);
         int r2 = find(s2);
-        if (r1 != r2) p[r1] = r2;
+        if (r1 != r2) {
+            parent[r1] = r2;
+        }
     }
 }
 ```

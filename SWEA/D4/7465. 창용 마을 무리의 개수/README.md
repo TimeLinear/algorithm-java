@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-union-find, implementation
+union-find, graph
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-09-17 14:50:05
+2026-09-17 14:50:20
 
