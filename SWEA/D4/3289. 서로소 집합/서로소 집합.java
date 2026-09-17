@@ -7,7 +7,7 @@ class Solution
 {
 	static StreamTokenizer in;
 	static int N, M;
-	static int[] p;
+	static int[] p, rank;
 
 	public static void main(String[] args) throws IOException {
 		in = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
@@ -20,9 +20,11 @@ class Solution
 			M = nextInt();
 			
 			p = new int[N + 1];
+			rank = new int[N + 1];
 			
 			for(int i = 1; i <= N; i++) {
 				p[i] = i;
+				rank[i] = 0;
 			}
 			
 			sb.append('#').append(tc).append(' ');
@@ -51,7 +53,11 @@ class Solution
 		int r1 = find(s1);
 		int r2 = find(s2);
 		if (r1 == r2) return;
-		p[r1] = p[r2];
+		if (rank[r1] > rank[r2]) p[r2] = r1;
+		else {
+			p[r1] = r2;
+			if (rank[r1] == rank[r2]) rank[r2]++;
+		}
 	}
 	
 	static int nextInt() throws IOException {
