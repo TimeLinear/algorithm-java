@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-dfs, backtracking, implementation
+dfs, backtracking, bit-manipulation
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-09-17 13:30:22
+2026-09-17 13:32:55
 

@@ -2,31 +2,29 @@
 
 ## 💡 접근 방식
 
-DFS를 사용하여 맵을 탐색하며 방문한 알파벳을 비트마스크로 체크, 최대 방문 알파벳 수를 기록.
+DFS 탐색을 통한 경로 최적화. 비트마스크를 사용하여 지나온 알파벳을 관리하며 중복 경로를 피함.
 
 ## ⏱️ 시간 복잡도
 
-O(R * C * (4^K)) — (R*C)는 탐색 영역 크기, K는 방문 가능 알파벳 수. 알파벳 수가 K개일 때 각 칸에서 이웃 4 칸에 대해 DFS 호출할 수 있어 최악의 경우 지수 시간 복잡도 도출.
+O(4^(R*C)) — 최대 R*C 개의 셀을 탐색하므로 경우의 수는 지수적으로 증가하나 비트마스크를 통해 중복을 피함. 실제 시간은 비트마스크에 의해 줄어든다.
 
 ## 📦 공간 복잡도
 
-O(1) — 비트마스크는 상수 크기 사용, 재귀 호출 스택은 최대 R*C 깊이이지만 비트마스크 외에 별도의 배열은 사용하지 않으므로 상수적.
+O(R*C) — 메모리 사용의 대부분은 HashSet에 경로 기록 및 DFS 스택 공간에 소비된다.
 
 ## 🔧 개선 사항
 
-1) 방문했던 알파벳 기록 방법: 비트마스크에 의한 판독 시 항상 범위를 체크하여 성능 저하를 피할 수 있음.
-2) 매개변수에서 새로 업데이트한 flag를 직접 전달하는 것이 아닌, 지역변수로 셋팅하여 중복연산 방지.
-3) 이동 방향 확인 시 배열 범위 체크를 제외하고 다양한 조건을 활용할 수 있도록 수정. 예시
-   - if (isValid(nr, nc, flag)) { dfs(nr, nc, newFlag) }
-4) 한 전역 변수 대신 더 명확한 지역변수나 클래스를 사용하면 가독성 향상.
+1) HashSet을 ConcurrentHashMap으로 변경하여 동시성 문제 방지 및 메모리 효율성 증대. 
+2) DFS의 깊이 한계를 두고 매개변수 (x, y) 를 인스턴스에 저장하여 재사용.
+3) 사용하지 않는 main() 메서드의 불필요한 로직 제거.
 
 ## 🎯 다음 추천 문제
 
-SWEA 1767번 - 프로세서 연결하기 | DFS를 활용하여 조건부 탐색 및 결과 최적화를 배우기 좋은 문제.
+SW Expert Academy 4008번 - 숫자 만들기 | 비트마스크와 DFS를 활용한 다른 조합 및 경로 문제로 연습.
 
 ## 🏷️ 태그
 
-dfs, backtracking, implementation
+dfs, backtracking, bit-manipulation
 
 ## ✨ 모범 답안
 
@@ -34,59 +32,60 @@ dfs, backtracking, implementation
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 
 class Solution {
-	static final int MAX_SIZE = 20;
-	static final int[] dr = {0, 1, 0, -1};
-	static final int[] dc = {1, 0, -1, 0};
-	static int R, C;
-	static char[][] map = new char[MAX_SIZE + 1][MAX_SIZE + 1];
-	static int maxCnt;
+    static final int MAX_SIZE = 20;
+    static final int[] dr = {0, 1, 0, -1};
+    static final int[] dc = {1, 0, -1, 0};
+    static int R, C;
+    static char[][] map = new char[MAX_SIZE + 1][MAX_SIZE + 1];
+    static int maxCnt;
+    static HashSet<Long> dp = new HashSet<>();
 
-	public static void main(String[] args) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		StringBuilder sb = new StringBuilder();
-		int T = Integer.parseInt(br.readLine());
-		StringTokenizer st;
+    public static void main(String[] args) throws NumberFormatException, IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringBuilder sb = new StringBuilder();
 
-		for (int tc = 1; tc <= T; tc++) {
-			st = new StringTokenizer(br.readLine());
-			R = Integer.parseInt(st.nextToken());
-			C = Integer.parseInt(st.nextToken());
-			maxCnt = 0;
+        int T = Integer.parseInt(br.readLine());
+        StringTokenizer st;
+        for (int tc = 1; tc <= T; tc++) {
+            st = new StringTokenizer(br.readLine());
+            R = Integer.parseInt(st.nextToken());
+            C = Integer.parseInt(st.nextToken());
+            maxCnt = 0;
+            dp.clear();
 
-			for (int i = 1; i <= R; i++) {
-				String line = br.readLine();
-				for (int j = 1; j <= C; j++) {
-					map[i][j] = line.charAt(j - 1);
-				}
-			}
+            for (int i = 1; i <= R; i++) {
+                String line = br.readLine();
+                for (int j = 1; j <= C; j++) {
+                    map[i][j] = line.charAt(j - 1);
+                }
+            }
 
-			dfs(1, 1, (1 << (map[1][1] - 'A')));
-			sb.append('#').append(tc).append(' ').append(maxCnt).append('\n');
-		}
-		System.out.print(sb);
-	}
+            dfs(1, 1, (1 << (map[1][1] - 'A')), 1);
+            sb.append('#').append(tc).append(' ').append(maxCnt).append('\n');
+        }
+        System.out.print(sb);
+    }
 
-	static void dfs(int r, int c, int flag) {
-		if (Integer.bitCount(flag) == 26) {
-			maxCnt = Math.max(maxCnt, 26);
-			return;
-		}
+    static void dfs(int r, int c, int flag, int cnt) {
+        if (maxCnt != cnt) { 
+            if (!dp.add(key(r, c, flag))) return;
+            for (int d = 0; d < 4; d++) { 
+                int nr = r + dr[d];
+                int nc = c + dc[d];
+                if (nr > R || nr < 1 || nc > C || nc < 1 || (flag & (1 << (map[nr][nc] - 'A'))) != 0)
+                    continue;
+                dfs(nr, nc, flag | (1 << (map[nr][nc] - 'A')), cnt + 1);
+            }
+        }
+        maxCnt = Math.max(maxCnt, cnt);
+    }
 
-		for (int d = 0; d < 4; d++) {
-			int nr = r + dr[d];
-			int nc = c + dc[d];
-
-			if (isValid(nr, nc, flag)) {
-				dfs(nr, nc, (flag | (1 << (map[nr][nc] - 'A'))));
-			}
-		}
-	}
-
-	static boolean isValid(int r, int c, int flag) {
-		return r >= 1 && r <= R && c >= 1 && c <= C && (flag & (1 << (map[r][c] - 'A'))) == 0;
-	}
+    static long key(int r, int c, int flag) {
+        return ((long) r << 32) | ((long) c << 26) | flag;
+    }
 }
 ```
