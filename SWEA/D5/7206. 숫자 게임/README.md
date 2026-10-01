@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-recursion, math
+recursion, math, implementation
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-10-01 17:22:45
+2026-10-01 17:24:15
 

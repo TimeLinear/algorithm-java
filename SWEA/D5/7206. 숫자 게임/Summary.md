@@ -2,27 +2,30 @@
 
 ## 💡 접근 방식
 
-주어진 숫자를 재귀적으로 분할하여 곱한 값의 최대 분할 수를 계산하는 DFS를 사용한 접근 방식.
+주어진 숫자를 분할하여 가능한 모든 곱의 최대 횟수를 재귀적으로 계산하는 DFS 기반 접근.
 
 ## ⏱️ 시간 복잡도
 
-O(2^(d-1)) — d는 분할 가능한 자리 수; 모든 조합을 시도하므로 최악의 경우 지수 시간복잡도 발생. 분할 수가 5자리 이내로 제한되므로 실질적으로는 다루기 수월함.
+O(2^D) — D는 자릿수. 각 자릿수별로 분할 여부를 결정하며 호출 횟수는 지수적으로 증가. (최대 5자리 수로 인한 한계)
 
 ## 📦 공간 복잡도
 
-O(d) — 호출 스택에 따른 공간 사용, 각 분할 재귀 호출에서 추가적인 변수에 대한 공간이 필요하므로 최대 d (자리 수) 만큼 필요.
+O(D) — DFS의 재귀 깊이와 dp 배열이 사용되며 자릿수를 기반으로 메모리 사용량 결정.
 
 ## 🔧 개선 사항
 
-1) dfs()의 호출 수를 줄이기 위해 이미 계산한 값 저장(use memoization). 2) 곱셈이 아닌 덧셈으로 구분을 했을 때의 예외 처리로 엣지 케이스 검토. 3) 코드 가독성 향상을 위해 변수를 명확하고 일관되게 사용.
+1) dp 배열 초기화 추가: dp 배열을 사용하기 전에 초기화 필요.
+2) 자릿수 계산을 반복문이 아니라 Character.toString()으로 변환하여 간단히 계산.
+3) 제곱수를 계산할 때 pow() 대신 곱하기 사용하면 불필요한 연산 줄임.
+4) 결과를 collect & display하기 위한 StringBuilder는 메인 루프에서 초기화 후 사용.
 
 ## 🎯 다음 추천 문제
 
-백준 14501번 - 퇴사 | 조합과 최적화 문제로 동적인 실전 연습.
+SWEA 7205번 - 숫자 게임 1 | 구조가 유사하므로 복습 겸 진행하기 좋음.
 
 ## 🏷️ 태그
 
-recursion, math
+recursion, math, implementation
 
 ## ✨ 모범 답안
 
@@ -30,41 +33,38 @@ recursion, math
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
+import java.io.StreamTokenizer;
 
 class Solution {
-    static int maxCnt;
-    static HashMap<Integer, Integer> memo = new HashMap<>();
+    static int[] dp = new int[100000];
 
     public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int T = Integer.parseInt(br.readLine().trim());
+        StreamTokenizer in = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
         StringBuilder sb = new StringBuilder();
 
-        for(int tc = 1; tc <= T; tc++) {
-            int n = Integer.parseInt(br.readLine().trim());
-            maxCnt = 0;
-            dfs(n, 0);
-            sb.append('#').append(tc).append(' ').append(maxCnt).append('\n');
+        in.nextToken();
+        int T = (int) in.nval;
+
+        for (int tc = 1; tc <= T; tc++) {
+            in.nextToken();
+            int n = (int) in.nval;
+            dp = new int[100000]; // 각 테스트 케이스마다 초기화
+            sb.append('#').append(tc).append(' ').append(dfs(n)).append('\n');
         }
-        System.out.print(sb);
+        System.out.println(sb);
     }
 
-    static void dfs(int n, int cnt) {
-        if (n < 10) {
-            maxCnt = Math.max(maxCnt, cnt);
-            return;
-        }
-            
-        if (memo.containsKey(n) && memo.get(n) >= cnt) return;
-        memo.put(n, cnt);
+    static int dfs(int n) {
+        if (n < 10) return 0;
+        if (dp[n] != 0) return dp[n];
 
-        int digitNum = String.valueOf(n).length();
-        for(int i = 1; i < (1 << (digitNum - 1)); i++) {
+        int digitNum = String.valueOf(n).length(); // 자릿수 간단히 계산
+        int maxCnt = 0;
+        for (int i = 1; i < (1 << (digitNum - 1)); i++) {
             int prod = 1;
             int rest = n;
             int divNum = 1;
-            for(int j = 0; j < digitNum - 1; j++) {
+            for (int j = 0; j < digitNum - 1; j++) {
                 divNum *= 10;
                 if ((i & (1 << j)) != 0) {
                     prod *= rest % divNum;
@@ -72,8 +72,9 @@ class Solution {
                     divNum = 1;
                 }
             }
-            dfs(prod * rest, cnt + 1);
+            maxCnt = Math.max(maxCnt, dfs(prod * rest) + 1);
         }
+        return dp[n] = maxCnt;
     }
 }
 ```
