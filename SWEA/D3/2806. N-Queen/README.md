@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-backtracking, bit-manipulation
+backtracking, bitmask, recursion
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-09-09 18:02:49
+2026-10-02 16:14:41
 
