@@ -10,7 +10,7 @@ class Solution
 	static int V, E;
 	static int[] parents;
 	static List<int[]> edges;
-	static long result;
+    static int[] rank;
 
 	public static void main(String[] args) throws IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -23,8 +23,8 @@ class Solution
 			st = new StringTokenizer(br.readLine());
 			V = Integer.parseInt(st.nextToken());
 			E = Integer.parseInt(st.nextToken());
-			result = 0;
 			
+            rank = new int[V + 1];
 			parents = new int[V + 1];
 			for(int i = 1; i <= V; i++) {
 				parents[i] = i;
@@ -44,19 +44,33 @@ class Solution
 			
 			edges.sort((a, b) -> a[2] - b[2]);
 			
-			int x, y;
-			for(int[] edge : edges) {
-				x = find(edge[0]);
-				y = find(edge[1]);
-				if (x != y) {
-					parents[x] = y;
-					result += edge[2];
-				}
-			}
+            long result = 0;
+            int cnt = 0;
+            for (int[] edge : edges) {
+                if (union(edge[0], edge[1])) {
+                    result += edge[2];
+                    if (++cnt == V - 1) break;
+                }
+            }
 			sb.append("#").append(tc).append(" ").append(result).append("\n");
 		}
 		System.out.println(sb);
 	}
+    
+    static boolean union(int a, int b) {
+        int x = find(a);
+    	int y = find(b);
+        if (x == y) return false;
+        if (rank[x] < rank[y]) {
+        parents[x] = y;
+        } else if (rank[x] > rank[y]) {
+            parents[y] = x;
+        } else {
+            parents[y] = x;
+            rank[x]++;
+        }
+        return true;
+    }
     
     static int find(int x) {
 		if (parents[x] == x) {
