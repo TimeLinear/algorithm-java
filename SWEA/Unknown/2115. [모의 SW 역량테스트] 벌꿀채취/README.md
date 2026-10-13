@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-brute-force, bitmask, implementation
+brute-force, dfs, implementation, backtracking
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-10-13 11:51:15
+2026-10-13 12:11:07
 

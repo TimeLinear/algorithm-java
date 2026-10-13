@@ -2,7 +2,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StreamTokenizer;
-import java.util.Arrays;
 
 class Solution
 {
@@ -31,7 +30,7 @@ class Solution
 			// 미리 모든 점에서의 최적해 계산
 			for (int i = 0; i < n; i++) {
 				for(int j = 0; j <= n - m; j++) {
-					calcProfit(i, j);
+					profit[i][j] = dfs(i, j, 0, 0);
 				}
 			}
 			
@@ -54,29 +53,20 @@ class Solution
 		System.out.print(sb);
 	}
 	
-	static int calcProfit(int row, int col) {
-		// m 칸 중에 c를 넘지않는 선에서 어떤 칸이 몇 칸 선택될 지 알 수 없다.
-		// combination으로 조건 따져가면서 고르는 것이 좋겠음.
-		int[] nums = Arrays.copyOfRange(map[row], col, col + m);
-		
-		int maxProfit = 0;
-		Outer:
-		for(int flag = 0; flag < (1 << m); flag++) {
-			int sum = 0, cur = 0;
-			for(int i = 0; i < m; i++) {
-				if ((flag & (1 << i)) != 0) {
-					// c를 넘는지 보면서
-					sum += nums[i];
-					if (sum > c) continue Outer;
-					// 실제 이득값 계산
-					cur += nums[i] * nums[i];
-				}
-			}
-			
-			maxProfit = Math.max(maxProfit, cur);
-		}
-		
-		return profit[row][col] = maxProfit; 
+	// dfs로도 구현 가능
+	static int dfs(int row, int col, int idx, int sum) {
+	    if (idx == m) return 0;
+
+	    int val = map[row][col + idx];
+	    
+	    // 안 넣는 경우
+	    int best = dfs(row, col, idx + 1, sum);
+
+	    // 넣는 경우 (용량을 넘지 않을 때만)
+	    if (sum + val <= c) {
+	        best = Math.max(best, val * val + dfs(row, col, idx + 1, sum + val));
+	    }
+	    return best;
 	}
 	
 	static int nextInt() throws IOException {
