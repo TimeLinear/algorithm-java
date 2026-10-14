@@ -2,7 +2,7 @@
 
 ## 💡 접근 방식
 
-patience sorting 방식의 LIS 알고리즘입니다. 배열 c[0..size-1]에 길이별 가장 작은 꼬리 값을 유지하고, 새 값이 마지막 꼬리보다 크면 뒤에 추가해 길이를 늘립니다. 그렇지 않으면 이분 탐색(lower bound)으로 처음으로 target 이상인 위치를 찾아 그 값을 교체합니다. 최종 size가 LIS 길이입니다.
+tails 배열 c[k]에 '길이 k인 증가 부분 수열의 마지막 값 중 최솟값'을 유지하는 방식(patience sorting)으로 푼다. 각 원소가 c[size]보다 크면 끝에 붙여 길이를 늘리고, 아니면 lower bound 이분 탐색으로 처음으로 target 이상인 위치를 찾아 교체한다. 최종 size가 LIS의 길이다.
 
 ## ⏱️ 시간 복잡도
 
@@ -10,15 +10,15 @@ O(N log N) - 원소마다 이분 탐색을 최대 1회 수행한다.
 
 ## 📦 공간 복잡도
 
-O(N) - 입력 배열 nums와 꼬리 값 배열 c를 사용한다.
+O(N) - nums와 c 배열이 각각 N+1 크기다.
 
 ## 🔧 개선 사항
 
-이미 충분히 좋은 코드입니다. 정확성도 확인했습니다. 엄격히 증가하는 수열이라 c[size-1] < nums[i]일 때만 추가하고, 같거나 작으면 lowerBound로 교체하는 처리가 맞습니다. lowerBound는 탐색 범위를 [0, size-1]로 두며, 이 구간에 target 이상인 값이 반드시 존재하므로(마지막 꼬리 >= target) end를 반환해도 안전합니다. 사소한 정리 사항으로, 입력 크기가 N=1이어도 c[0] 초기화가 정상 동작합니다. n, nums, c를 static 필드 대신 지역 변수로 두면 가독성이 좋아지고, lowerBound에 배열과 size를 인자로 넘기면 의존성이 명확해집니다. 또한 else 분기를 제거하고 Arrays.binarySearch나 단일 lowerBound(0, size, x)로 통일하면 코드가 더 단순해집니다. 주석은 '교체 대상 인덱스를 반환'처럼 명확히 다듬으면 좋습니다.
+알고리즘은 정확하고 엄격한 증가(strictly increasing) 조건도 lower bound로 올바르게 처리한다. 다만 c[0]=0을 센티넬로 쓰기 때문에 모든 값이 1 이상이라는 전제에 의존한다. 0 이하의 값이 들어오면 lowerBound가 0을 반환해 센티넬을 덮어쓰고 결과가 틀려진다. 이 문제의 제약에서는 통과하지만, 센티넬 없이 0-indexed tails 배열로 pos == size이면 size++ 하는 방식으로 바꾸면 값 범위와 무관하게 안전하고 if/else 분기도 사라진다. nums 배열은 저장할 필요 없이 읽으면서 바로 처리해도 된다. static 필드도 지역 변수로 바꾸는 편이 깔끔하다.
 
 ## 🎯 다음 추천 문제
 
-백준 12015번 '가장 긴 증가하는 부분 수열 2'처럼 N이 매우 큰 LIS 문제를 풀어보거나, 같은 플랫폼에서는 'swea 최장 증가 부분 수열 경로 복원' 유형을 검색해 보세요.
+번호는 확실하지 않아 키워드로 제시한다. SWEA에서 '최장 증가 부분 수열(LIS)'을 응용하는 문제나 '가장 긴 증가하는 부분 수열', '전깃줄'류 문제(LIS 변형, 이분 탐색)를 검색해 풀어보면 좋다.
 
 ## 🏷️ 태그
 
@@ -33,22 +33,25 @@ import java.io.InputStreamReader;
 import java.io.StreamTokenizer;
 
 class Solution {
-	static StreamTokenizer in = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
-
 	public static void main(String[] args) throws IOException {
+		StreamTokenizer in = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
 		StringBuilder sb = new StringBuilder();
-		int T = nextInt();
+
+		in.nextToken();
+		int T = (int) in.nval;
 
 		for (int tc = 1; tc <= T; tc++) {
-			int n = nextInt();
+			in.nextToken();
+			int n = (int) in.nval;
 			int[] tails = new int[n];
 			int size = 0;
 
 			for (int i = 0; i < n; i++) {
-				int x = nextInt();
-				int idx = lowerBound(tails, size, x);
-				tails[idx] = x;
-				if (idx == size) {
+				in.nextToken();
+				int x = (int) in.nval;
+				int pos = lowerBound(tails, size, x);
+				tails[pos] = x;
+				if (pos == size) {
 					size++;
 				}
 			}
@@ -57,24 +60,18 @@ class Solution {
 		System.out.print(sb);
 	}
 
-	// tails[0..size) 중 target 이상인 첫 위치를 반환한다. 없으면 size를 반환한다.
-	static int lowerBound(int[] tails, int size, int target) {
-		int lo = 0;
-		int hi = size;
+	// tails[0..len) 에서 target 이상인 첫 인덱스를 반환한다. 없으면 len.
+	static int lowerBound(int[] a, int len, int target) {
+		int lo = 0, hi = len;
 		while (lo < hi) {
 			int mid = (lo + hi) >>> 1;
-			if (tails[mid] >= target) {
+			if (a[mid] >= target) {
 				hi = mid;
 			} else {
 				lo = mid + 1;
 			}
 		}
 		return lo;
-	}
-
-	static int nextInt() throws IOException {
-		in.nextToken();
-		return (int) in.nval;
 	}
 }
 
