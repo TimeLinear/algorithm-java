@@ -8,7 +8,7 @@ SWEA
 
 ### 분류
 
-binary-search, dynamic-programming, lis
+array, dynamic-programming
 
 ### 언어
 
@@ -16,5 +16,5 @@ java
 
 ### 제출 일자
 
-2026-10-14 16:36:42
+2026-10-18 19:38:33
 

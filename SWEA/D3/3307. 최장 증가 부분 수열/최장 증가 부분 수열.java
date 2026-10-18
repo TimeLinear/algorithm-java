@@ -16,19 +16,20 @@ class Solution
 		
 		for(int tc = 1; tc <= T; tc++) {
 			n = nextInt();
-			nums = new int[n + 1];
-			c = new int[n + 1];
+			nums = new int[n];
+			c = new int[n];
 
-			for(int i = 1; i <= n; i++) {
+			for(int i = 0; i < n; i++) {
 				nums[i] = nextInt();
 			}
 			
-			int size = 0;
-			for(int i = 1; i <= n; i++) {
-				if (c[size] < nums[i]) {
-					c[++size] = nums[i];
+			int size = 1;
+			c[0] = nums[0];
+			for(int i = 1; i < n; i++) {
+				if (c[size - 1] < nums[i]) {
+					c[size++] = nums[i];
 				} else {
-					int insertIdx = lowerBound(size, nums[i]);
+					int insertIdx = lowerBound(size - 1, nums[i]);
 					c[insertIdx] = nums[i];
 				}
 			}
